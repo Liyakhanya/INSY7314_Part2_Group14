@@ -8,12 +8,22 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: npm install
+          name: Install dependencies with lockfile
+          command: |
+            # Use npm ci for consistent installs, or install specific Chai version
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+              # Force Chai v6 if no lockfile
+              npm install chai@6.2.0 --save-dev
+            fi
+      - run:
+          name: Verify Chai version
+          command: npm list chai
       - run:
           name: Fix Mocha permissions
           command: |
-            # Make sure mocha binary has execute permissions
             chmod +x node_modules/.bin/mocha
             ls -la node_modules/.bin/mocha
       - run:
@@ -27,7 +37,7 @@ jobs:
           command: npm test
       - run:
           name: Test completion
-          command: echo "✅ All 10 security tests completed successfully"
+          command: echo " All 10 security tests completed successfully"
 
   sonar-scan:
     docker:
@@ -37,7 +47,13 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: npm install
+          command: |
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+              npm install chai@6.2.0 --save-dev
+            fi
       - run:
           name: Install SonarScanner
           command: |
