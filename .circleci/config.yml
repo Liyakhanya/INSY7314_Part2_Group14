@@ -27,16 +27,17 @@ jobs:
           name: Install dependencies
           command: npm install
       - run:
-          name: Run SonarQube (FINAL FIX)
+          name: Run SonarQube (FIXED - separates sources/tests)
           command: |
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
               -Dsonar.organization=liyakhanya \
               -Dsonar.sources=. \
+              -Dsonar.tests=tests \
+              -Dsonar.test.inclusions=**/*.test.js \
+              -Dsonar.coverage.exclusions=**/*.test.js \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.scm.disabled=true \
-              -Dsonar.analysis.autoScan=false \
-              -Dsonar.analysis.automaticAnalysis=false \
               -Dsonar.token=$SONAR_TOKEN
 
 workflows:
