@@ -1,0 +1,50 @@
+version: 2.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/node:18.17.0
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Security audit
+          command: npm audit --audit-level=moderate
+      - run:
+          name: Run unit tests
+          command: npm test
+      - run:
+          name: Run security tests
+          command: npm run test:security
+      - run:
+          name: Security linting
+          command: npm run lint:security
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+
+  security-scan:
+    docker:
+      - image: cimg/node:18.17.0
+    steps:
+      - checkout
+      - run:
+          name: OWASP Dependency Check
+          command: |
+            wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip
+            unzip -q dependency-check-9.0.9-release.zip
+            ./dependency-check/bin/dependency-check.sh --project "BankingApp" --scan . --out . --format HTML --format JSON
+      - store_artifacts:
+          path: dependency-check-report.html
+          destination: security-reports
+
+workflows:
+  version: 2
+  security-pipeline:
+    jobs:
+      - build-and-test
+      - security-scan

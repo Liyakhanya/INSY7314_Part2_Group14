@@ -1,0 +1,65 @@
+{
+  "name": "insypaymentportal",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:ci": "mocha tests/**/*.test.js --reporter mocha-junit-reporter --reporter-options mochaFile=test-results/test-results.xml --timeout 10000",
+    "test:security": "mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
+    "test:security-headers": "mocha tests/security/security-headers.test.js --reporter spec",
+    "test:api-security": "mocha tests/security/api-security.test.js --reporter spec --timeout 15000",
+    "test:integration": "mocha tests/integration/**/*.test.js --reporter spec --timeout 15000",
+    "test:coverage": "nyc mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "lint": "eslint . --ext .js",
+    "lint:security": "eslint . --config .eslintrc.security.js --ext .js",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "security-check": "npm run audit && npm run test:security",
+    "build": "echo 'Backend build completed'",
+    "dev:debug": "nodemon --inspect app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "International Payments Portal - Secure Banking Application",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.7",
+    "supertest": "^6.3.3",
+    "nyc": "^15.1.0",
+    "eslint": "^8.45.0",
+    "eslint-plugin-security": "^1.7.1",
+    "mocha-junit-reporter": "^2.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "nyc": {
+    "reporter": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "exclude": [
+      "tests/**",
+      "coverage/**"
+    ]
+  }
+}
