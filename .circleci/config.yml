@@ -1,9 +1,5 @@
 version: 2.1
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.6
-  node: circleci/node@5.1.0
-
 jobs:
   test-backend:
     docker:
@@ -11,8 +7,9 @@ jobs:
     working_directory: ~/project
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
+      - run:
+          name: Install dependencies
+          command: npm install
       - run:
           name: Run security audit
           command: npm audit --audit-level=moderate
@@ -31,18 +28,34 @@ jobs:
   sonar-scan:
     docker:
       - image: cimg/node:18.17.0
+    working_directory: ~/project
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: npm install
+      - run:
           name: Install SonarScanner
-          command: npm install -g sonarqube-scanner
-      - sonarcloud/scan
+          command: |
+            npm install -g sonarqube-scanner
+      - run:
+          name: Run SonarQube analysis
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
+              -Dsonar.organization=liyakhanya \
+              -Dsonar.sources=. \
+              -Dsonar.tests=tests \
+              -Dsonar.test.inclusions=**/*.test.js \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.token=$SONAR_TOKEN
 
 workflows:
+  version: 2
   security-and-quality:
     jobs:
       - test-backend
       - sonar-scan:
           requires:
             - test-backend
-          context: sonarcloud
