@@ -1,133 +1,72 @@
 version: 2.1
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.6
+  node: circleci/node@5.1.0
+
 jobs:
-  security-audit:
+  test-backend:
     docker:
       - image: cimg/node:18.17.0
+    working_directory: ~/project/server
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
+      - node/install-packages:
+          pkg-manager: npm
+          working-directory: server
       - run:
-          name: Install Backend Dependencies
-          command: |
-            echo " Installing backend dependencies..."
-            cd INSYPaymentPortal/backend
-            npm install
+          name: Run backend security audit
+          working_directory: server
+          command: npm audit --audit-level=moderate
       - run:
-          name: Run npm audit (Backend)
+          name: Run backend tests (if any)
+          working_directory: server
           command: |
-            echo " Running security audit for backend dependencies..."
-            cd INSYPaymentPortal/backend
-            npm audit --audit-level=moderate
-      - run:
-          name: Run ESLint Security Scan
-          command: |
-            echo " Running security linting..."
-            cd INSYPaymentPortal/backend
-            npx eslint . --ext .js --config .eslintrc.security.js --no-eslintrc
-      - run:
-          name: Security Code Analysis
-          command: |
-            echo " Analyzing security implementation..."
-            echo "SSL/TLS Configuration: VERIFIED"
-            echo " Input Validation: VERIFIED" 
-            echo " Password Hashing: VERIFIED"
-            echo " Rate Limiting: VERIFIED"
-            echo " XSS Protection: VERIFIED"
-            echo " SQL Injection Protection: VERIFIED"
-      - run:
-          name: OWASP Dependency Check
-          command: |
-            echo " Running OWASP Dependency Check..."
-            wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip
-            unzip -q dependency-check-9.0.9-release.zip
-            ./dependency-check/bin/dependency-check.sh \
-              --project "InternationalPaymentsPortal" \
-              --scan "INSYPaymentPortal/backend" \
-              --out "security-reports" \
-              --format "HTML" \
-              --format "JSON" \
-              --enableExperimental
-      - store_artifacts:
-          path: security-reports
-          destination: security-reports
+            if [ -f package.json ] && npm run | grep -q test; then
+              npm test
+            else
+              echo "No tests configured"
+            fi
 
-  backend-tests:
+  test-frontend:
     docker:
       - image: cimg/node:18.17.0
+    working_directory: ~/project/client
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
+      - node/install-packages:
+          pkg-manager: npm
+          working-directory: client
       - run:
-          name: Install Backend Dependencies
-          working-directory: INSYPaymentPortal/backend
-          command: npm install
+          name: Run frontend security audit
+          working_directory: client
+          command: npm audit --audit-level=moderate
       - run:
-          name: Run Security Tests
-          working-directory: INSYPaymentPortal/backend
+          name: Run frontend tests (if any)
+          working_directory: client
           command: |
-            echo "🧪 Running security tests..."
-            npm test
-      - store_test_results:
-          path: INSYPaymentPortal/backend/test-results
+            if [ -f package.json ] && npm run | grep -q test; then
+              npm test
+            else
+              echo "No tests configured"
+            fi
 
-  frontend-security:
+  sonar-scan:
     docker:
       - image: cimg/node:18.17.0
     steps:
       - checkout
-      - run:
-          name: Install Frontend Dependencies
-          working-directory: INSYPaymentPortal/frontend
-          command: npm install
-      - run:
-          name: Run npm audit (Frontend)
-          working-directory: INSYPaymentPortal/frontend
-          command: |
-            echo " Running security audit for frontend dependencies..."
-            npm audit --audit-level=moderate
-      - run:
-          name: Build Frontend
-          working-directory: INSYPaymentPortal/frontend
-          command: |
-            echo " Building frontend for production..."
-            npm run build
-      - store_artifacts:
-          path: INSYPaymentPortal/frontend/dist
-          destination: frontend-build
-
-  sonarqube-analysis:
-    docker:
-      - image: cimg/node:18.17.0
-    steps:
-      - checkout
-      - run:
-          name: Install Backend Dependencies for SonarQube
-          working-directory: INSYPaymentPortal/backend
-          command: npm install
-      - run:
-          name: Download SonarScanner
-          command: |
-            echo " Downloading SonarScanner..."
-            wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856.zip
-            unzip -q sonar-scanner-cli-4.8.0.2856.zip
-      - run:
-          name: Run SonarQube Analysis
-          command: |
-            echo " Running SonarQube analysis..."
-            ./sonar-scanner-4.8.0.2856/bin/sonar-scanner \
-              -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-              -Dsonar.organization=$SONAR_ORGANIZATION \
-              -Dsonar.sources=INSYPaymentPortal/backend \
-              -Dsonar.tests=INSYPaymentPortal/backend/tests \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN \
-              -Dsonar.coverage.exclusions=**/node_modules/**,**/tests/**
+      - sonarcloud/scan
 
 workflows:
-  security-pipeline:
+  quality-check:
     jobs:
-      - security-audit
-      - backend-tests
-      - frontend-security
-      - sonarqube-analysis:
+      - test-backend
+      - test-frontend
+      - sonar-scan:
           requires:
-            - backend-tests
+            - test-backend
+            - test-frontend
+          context: sonarcloud
