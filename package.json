@@ -14,9 +14,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
-    "test:ci": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
-    "test:security": "mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
+    "test": "npx mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:ci": "npx mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:security": "npx mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
     "audit": "npm audit --audit-level=moderate",
     "sonar": "sonar-scanner"
   }

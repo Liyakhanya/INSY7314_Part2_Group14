@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const Customer = require('../models/customerModel.js');
 require('dotenv').config();
 
-// Enhanced validation patterns for banking
+
 const patterns = {
   username: /^[a-zA-Z0-9_]{3,30}$/,
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/,
@@ -28,7 +28,7 @@ const register = async (req, res) => {
 
     console.log('Registration attempt:', { fullName, idNumber, accountNumber, username });
 
-    // Enhanced input validation
+   
     const validationErrors = [];
     
     if (!fullName || !patterns.fullName.test(fullName)) {
@@ -54,7 +54,7 @@ const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
+    
     const existingCustomer = await Customer.findOne({
       $or: [
         { username: username.toLowerCase() },
@@ -79,11 +79,11 @@ const register = async (req, res) => {
       });
     }
 
-    // Enhanced password hashing
+   
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create customer with normalized data
+   
     const customer = await Customer.create({
       fullName: fullName.trim(),
       idNumber: idNumber.toUpperCase(),
@@ -92,7 +92,7 @@ const register = async (req, res) => {
       password: hashedPassword
     });
 
-    // Remove password from response
+    
     const customerResponse = customer.toObject();
     delete customerResponse.password;
 
@@ -112,7 +112,7 @@ const register = async (req, res) => {
   } catch (err) {
     console.error('Registration error:', err);
     
-    // Handle duplicate key errors
+    
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern)[0];
       const message = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
@@ -135,7 +135,7 @@ const login = async (req, res) => {
 
     console.log('Login attempt:', { username, accountNumber });
 
-    // Enhanced input validation
+  
     const validationErrors = [];
     
     if (!username || !patterns.username.test(username)) {

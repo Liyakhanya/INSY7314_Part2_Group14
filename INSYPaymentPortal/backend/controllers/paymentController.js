@@ -1,6 +1,6 @@
 const InternationalPayment = require("../models/internationalPaymentModel.js");
 
-// Enhanced validation patterns
+
 const patterns = {
   amount: /^\d+(\.\d{1,2})?$/,
   currency: /^[A-Z]{3}$/,
@@ -32,7 +32,7 @@ const createInternationalPayment = async (req, res) => {
       swiftCode
     });
 
-    // Enhanced input validation
+    
     const errors = [];
     
     if (!amount || !patterns.amount.test(amount.toString()) || parseFloat(amount) <= 0) {
@@ -71,10 +71,10 @@ const createInternationalPayment = async (req, res) => {
       });
     }
 
-    // Generate unique reference if not provided
+    
     const paymentReference = reference || `SWIFT-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
-    // Create payment with enhanced validation
+    
     const payment = await InternationalPayment.create({
       customerId: req.user.userId,
       amount: parseFloat(amount),
@@ -89,7 +89,7 @@ const createInternationalPayment = async (req, res) => {
       status: 'pending'
     });
 
-    // Populate customer details for response
+    
     await payment.populate('customerId', 'fullName accountNumber');
 
     res.status(201).json({
@@ -115,7 +115,7 @@ const createInternationalPayment = async (req, res) => {
   } catch (error) {
     console.error('Payment creation error:', error);
     
-    // Handle duplicate reference
+    
     if (error.code === 11000 && error.keyPattern.reference) {
       return res.status(400).json({
         success: false,
