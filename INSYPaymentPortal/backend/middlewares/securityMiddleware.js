@@ -62,7 +62,8 @@ const bruteForceLimiter = rateLimit({
     },
     skipSuccessfulRequests: true,
     keyGenerator: (req) => {
-        return req.ip + (req.body.username || req.body.email || '');
+        const username = req.body?.username || req.body?.email || '';
+        return req.ip + username;
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -224,40 +225,46 @@ const securityMiddlewares = (app) => {
     });
 
     // Enhancing security event logging
-    app.use((req, res, next) => {
-        const securityRelevantEndpoints = [
-            '/v1/auth/login', 
-            '/v1/auth/register', 
-            '/v1/auth/reset-password',
-            '/v1/auth/change-password',
-            '/v1/payments'
-        ];
-        
-        if (securityRelevantEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
-            const logData = {
-                event: 'SECURITY_REQUEST',
-                method: req.method,
-                path: req.path,
-                ip: req.ip,
-                userAgent: req.get('User-Agent'),
-                timestamp: new Date().toISOString(),
-                contentType: req.get('Content-Type')
-            };
+app.use((req, res, next) => {
+    const securityRelevantEndpoints = [
+        '/v1/auth/login', 
+        '/v1/auth/register', 
+        '/v1/auth/reset-password',
+        '/v1/auth/change-password',
+        '/v1/payments'
+    ];
+    
+    if (securityRelevantEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
+        const logData = {
+            event: 'SECURITY_REQUEST',
+            method: req.method,
+            path: req.path,
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            timestamp: new Date().toISOString(),
+            contentType: req.get('Content-Type')
+        };
 
-            // Mask sensitive data in logs
-            if (req.body.password) {
-                logData.hasPassword = true;
-            }
-            if (req.body.amount) {
-                logData.hasPayment = true;
-            }
-
-            console.log('🔒 Security Event:', logData);
+        // checking for sensitive data using optional chaining
+        if (req.body?.password) {
+            logData.hasPassword = true;
         }
-        next();
-    });
+        if (req.body?.amount) {
+            logData.hasPayment = true;
+        }
+        if (req.body?.email) {
+            logData.hasEmail = true;
+        }
+        if (req.body?.username) {
+            logData.hasUsername = true;
+        }
 
-    // Request size validation middleware
+        console.log('🔒 Security Event:', logData);
+    }
+    next();
+});
+
+    // Requesting size validation middleware
     app.use((req, res, next) => {
         const contentLength = parseInt(req.get('Content-Length') || '0');
         const maxSize = 10 * 1024; // 10KB max payload
