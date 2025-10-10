@@ -27,3 +27,5 @@ rudderz243 (2025). *GitHub - rudderz243/library_api.* [online] GitHub. Available
 The Coding Monk (2025). *How to add rate limit to Express Server || How to Setup A Nodejs + Express API with Rate Limiting.* [online] YouTube. Available at: https://www.youtube.com/watch?v=fjmaI31M5-Q [Accessed 9 Oct. 2025].
 
 www.rexegg.com. (n.d.). *Regex Cheat Sheet.* [online] Available at: https://www.rexegg.com/regex-quickstart.php [Accessed 10 Oct. 2025].
+
+Alexkondov.com. (2024). How to Style a React Application. [online] Available at: https://alexkondov.com/full-stack-tao-styling/ [Accessed 10 Oct. 2025].
