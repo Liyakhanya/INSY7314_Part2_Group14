@@ -11,7 +11,7 @@ jobs:
           name: Install dependencies
           command: npm install
       - run:
-          name: Run security tests (DIRECT NODE.JS - NO PERMISSIONS)
+          name: Run security tests
           command: node node_modules/mocha/bin/mocha.js tests/**/*.test.js --reporter spec --timeout 10000
       - run:
           name: Security audit
@@ -27,7 +27,7 @@ jobs:
           name: Install dependencies
           command: npm install
       - run:
-          name: Run SonarQube analysis
+          name: Run SonarQube (MINIMAL - WILL WORK)
           command: |
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
