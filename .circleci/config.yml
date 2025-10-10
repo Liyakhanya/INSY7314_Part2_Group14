@@ -27,13 +27,14 @@ jobs:
           name: Install dependencies
           command: npm install
       - run:
-          name: Run SonarQube (MINIMAL - WILL WORK)
+          name: Run SonarQube (FIXED - adds scm.disabled)
           command: |
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
               -Dsonar.organization=liyakhanya \
               -Dsonar.sources=. \
               -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.scm.disabled=true \
               -Dsonar.token=$SONAR_TOKEN
 
 workflows:
