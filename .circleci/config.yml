@@ -8,14 +8,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install guaranteed dependencies
-          command: |
-            npm install
-            npm list mocha chai
+          name: Install dependencies
+          command: npm install
       - run:
           name: Run security tests
-          command: |
-            ./node_modules/.bin/mocha tests/**/*.test.js --reporter spec --timeout 10000
+          command: npx mocha tests/**/*.test.js --reporter spec --timeout 10000
       - run:
           name: Security audit
           command: npm audit --audit-level=moderate
