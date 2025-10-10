@@ -11,8 +11,8 @@ jobs:
           name: Install dependencies
           command: npm install
       - run:
-          name: Run security tests
-          command: npx mocha tests/**/*.test.js --reporter spec --timeout 10000
+          name: Run security tests (DIRECT NODE.JS - NO PERMISSIONS)
+          command: node node_modules/mocha/bin/mocha.js tests/**/*.test.js --reporter spec --timeout 10000
       - run:
           name: Security audit
           command: npm audit --audit-level=moderate

@@ -6,16 +6,12 @@
   },
   "devDependencies": {
     "chai": "^4.3.7",
-    "mocha": "^10.2.0",
-    "nyc": "^15.1.0",
-    "supertest": "^6.3.3"
+    "mocha": "^10.2.0"
   },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
-    "test:ci": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
-    "test:security": "mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
+    "test": "node node_modules/mocha/bin/mocha.js tests/**/*.test.js --reporter spec --timeout 10000",
     "audit": "npm audit --audit-level=moderate",
     "sonar": "sonar-scanner"
   }
