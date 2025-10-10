@@ -50,7 +50,7 @@ app.use((req, res, next) => {
 
 // Enhanced CORS for specific routes
 app.use('/v1/auth', (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:5173');
+    res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'https://localhost:5173');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -190,13 +190,12 @@ app.use((err, req, res, next) => {
 
 const port = process.env.API_PORT || 3000;
 
-// SSL Configuration for production
+// SSL Configuration for development and production
 const startServer = () => {
-    if (process.env.NODE_ENV === 'production') {
+    try {
         const sslOptions = {
-            key: process.env.SSL_PRIVATE_KEY ? Buffer.from(process.env.SSL_PRIVATE_KEY, 'base64') : null,
-            cert: process.env.SSL_CERTIFICATE ? Buffer.from(process.env.SSL_CERTIFICATE, 'base64') : null,
-            ca: process.env.SSL_CA_BUNDLE ? Buffer.from(process.env.SSL_CA_BUNDLE, 'base64') : null,
+            key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+            cert: fs.readFileSync(path.join(__dirname, 'localhost+2.pem')),
             // SSL security settings
             secureProtocol: 'TLSv1_2_method',
             ciphers: [
@@ -208,29 +207,23 @@ const startServer = () => {
             honorCipherOrder: true
         };
 
-        if (!sslOptions.key || !sslOptions.cert) {
-            console.error('SSL certificates required for production');
-            console.error('Please set SSL_PRIVATE_KEY and SSL_CERTIFICATE environment variables');
-            process.exit(1);
-        }
-
-        // Start HTTPS server with SSL certificates
+        // Always use HTTPS for better security
         https.createServer(sslOptions, app).listen(port, () => {
-            console.log(`🏦 International Payments API running on HTTPS port ${port}`);
-            console.log(`🔒 SSL/TLS Encryption Enabled`);
-            console.log(`✅ Health check: https://localhost:${port}/health`);
-            console.log(`🌍 Environment: PRODUCTION`);
-            console.log(`📊 Security Level: ENTERPRISE`);
-            console.log(`🔐 SSL Certificate: Validated`);
+            console.log(` International Payments API running on HTTPS port ${port}`);
+            console.log(` SSL/TLS Encryption Enabled`);
+            console.log(` Health check: https://localhost:${port}/health`);
+            console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(` SSL: Development Certificates Active`);
         });
-    } else {
-        // Development - HTTP (OK for development only)
+    } catch (error) {
+        console.error(' SSL certificate error:', error.message);
+        console.log(' Falling back to HTTP for development...');
+        
+        // Fallback to HTTP if SSL fails
         app.listen(port, () => {
-            console.log(`🏦 International Payments API running on port ${port}`);
-            console.log(`🔒 Security middleware active`);
-            console.log(`✅ Health check: http://localhost:${port}/health`);
-            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`💡 Development mode - SSL not required`);
+            console.log(` International Payments API running on HTTP port ${port}`);
+            console.log(` Development mode - No SSL`);
+            console.log(` Health check: http://localhost:${port}/health`);
         });
     }
 };

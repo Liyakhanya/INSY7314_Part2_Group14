@@ -48,7 +48,7 @@ const InternationalPaymentForm = ({ onPaymentCreated }) => {
             const response = await paymentService.createPayment(data);
 
             if (response.success) {
-                setMessage('✅ International payment created successfully! Awaiting verification.');
+                setMessage(' International payment created successfully! Awaiting verification.');
                 reset(); // Clear form
                 if (onPaymentCreated) {
                     onPaymentCreated(response.payment);
@@ -62,7 +62,7 @@ const InternationalPaymentForm = ({ onPaymentCreated }) => {
         } catch (error) {
             console.error('Payment creation error:', error);
             const errorMessage = error.response?.data?.error || 'Payment creation failed. Please try again.';
-            setMessage(`❌ ${errorMessage}`);
+            setMessage(` ${errorMessage}`);
         } finally {
             setIsLoading(false);
         }
@@ -90,7 +90,7 @@ const InternationalPaymentForm = ({ onPaymentCreated }) => {
             <form onSubmit={handleSubmit(onSubmit)}>
                 {/* Payment Details Section */}
                 <div className="form-section">
-                    <h3>💰 Payment Details</h3>
+                    <h3> Payment Details</h3>
                     
                     <div className="form-row">
                         <div className="form-group">
@@ -268,7 +268,7 @@ const InternationalPaymentForm = ({ onPaymentCreated }) => {
                             Processing Payment...
                         </>
                     ) : (
-                        '🚀 Create International Payment'
+                        ' Create International Payment'
                     )}
                 </button>
             </form>

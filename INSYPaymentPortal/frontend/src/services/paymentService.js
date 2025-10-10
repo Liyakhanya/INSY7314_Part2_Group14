@@ -1,7 +1,7 @@
 // src/services/paymentService.js
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/v1';
+const API_BASE_URL = '/api';
 
 // Create axios instance with auth interceptor
 const apiClient = axios.create({

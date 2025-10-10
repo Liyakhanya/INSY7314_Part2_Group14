@@ -23,7 +23,7 @@ const BankingLogin = () => {
         setMessage('');
 
         try {
-            const response = await axios.post('http://localhost:3000/v1/auth/login', {
+            const response = await axios.post('/api/auth/login', {
                 username: data.username,
                 accountNumber: data.accountNumber,
                 password: data.password
