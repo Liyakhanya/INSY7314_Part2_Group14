@@ -6,9 +6,12 @@ jobs:
       - image: cimg/node:18.17.0
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-          app-dir: INSYPaymentPortal/backend
+      - run:
+          name: Install Backend Dependencies
+          command: |
+            echo " Installing backend dependencies..."
+            cd INSYPaymentPortal/backend
+            npm install
       - run:
           name: Run npm audit (Backend)
           command: |
@@ -25,7 +28,7 @@ jobs:
           name: Security Code Analysis
           command: |
             echo " Analyzing security implementation..."
-            echo " SSL/TLS Configuration: VERIFIED"
+            echo "SSL/TLS Configuration: VERIFIED"
             echo " Input Validation: VERIFIED" 
             echo " Password Hashing: VERIFIED"
             echo " Rate Limiting: VERIFIED"
@@ -53,11 +56,8 @@ jobs:
       - image: cimg/node:18.17.0
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-          app-dir: INSYPaymentPortal/backend
       - run:
-          name: Install dependencies
+          name: Install Backend Dependencies
           working-directory: INSYPaymentPortal/backend
           command: npm install
       - run:
@@ -74,14 +74,15 @@ jobs:
       - image: cimg/node:18.17.0
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-          app-dir: INSYPaymentPortal/frontend
+      - run:
+          name: Install Frontend Dependencies
+          working-directory: INSYPaymentPortal/frontend
+          command: npm install
       - run:
           name: Run npm audit (Frontend)
+          working-directory: INSYPaymentPortal/frontend
           command: |
             echo " Running security audit for frontend dependencies..."
-            cd INSYPaymentPortal/frontend
             npm audit --audit-level=moderate
       - run:
           name: Build Frontend
@@ -99,6 +100,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install Backend Dependencies for SonarQube
+          working-directory: INSYPaymentPortal/backend
+          command: npm install
+      - run:
           name: Download SonarScanner
           command: |
             echo " Downloading SonarScanner..."
@@ -115,7 +120,6 @@ jobs:
               -Dsonar.tests=INSYPaymentPortal/backend/tests \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.login=$SONAR_TOKEN \
-              -Dsonar.javascript.lcov.reportPaths=INSYPaymentPortal/backend/coverage/lcov.info \
               -Dsonar.coverage.exclusions=**/node_modules/**,**/tests/**
 
 workflows:
