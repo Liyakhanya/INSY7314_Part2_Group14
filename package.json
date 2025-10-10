@@ -9,5 +9,15 @@
     "mocha": "^11.7.4",
     "nyc": "^17.1.0",
     "supertest": "^7.1.4"
+  
+},
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:ci": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:security": "mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
+    "audit": "npm audit --audit-level=moderate",
+    "sonar": "sonar-scanner"
   }
 }
