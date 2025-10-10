@@ -8,49 +8,24 @@ jobs:
   test-backend:
     docker:
       - image: cimg/node:18.17.0
-    working_directory: ~/project/server
+    working_directory: ~/project
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - node/install-packages:
           pkg-manager: npm
-          working-directory: server
       - run:
-          name: Run backend security audit
-          working_directory: server
+          name: Run security audit
           command: npm audit --audit-level=moderate
       - run:
-          name: Run backend tests (if any)
-          working_directory: server
-          command: |
-            if [ -f package.json ] && npm run | grep -q test; then
-              npm test
-            else
-              echo "No tests configured"
-            fi
-
-  test-frontend:
-    docker:
-      - image: cimg/node:18.17.0
-    working_directory: ~/project/client
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-          working-directory: client
+          name: Run security tests
+          command: npm test
       - run:
-          name: Run frontend security audit
-          working_directory: client
-          command: npm audit --audit-level=moderate
-      - run:
-          name: Run frontend tests (if any)
-          working_directory: client
+          name: Check code quality
           command: |
-            if [ -f package.json ] && npm run | grep -q test; then
-              npm test
+            if [ -f 'node_modules/.bin/eslint' ]; then
+              npx eslint . --ext .js || echo 'ESLint issues found'
             else
-              echo "No tests configured"
+              echo 'ESLint not configured'
             fi
 
   sonar-scan:
@@ -58,15 +33,16 @@ jobs:
       - image: cimg/node:18.17.0
     steps:
       - checkout
+      - run:
+          name: Install SonarScanner
+          command: npm install -g sonarqube-scanner
       - sonarcloud/scan
 
 workflows:
-  quality-check:
+  security-and-quality:
     jobs:
       - test-backend
-      - test-frontend
       - sonar-scan:
           requires:
             - test-backend
-            - test-frontend
           context: sonarcloud

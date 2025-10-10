@@ -3,5 +3,11 @@
     "express-mongo-sanitize": "^2.2.0",
     "hpp": "^0.2.3",
     "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "chai": "^6.2.0",
+    "mocha": "^11.7.4",
+    "nyc": "^17.1.0",
+    "supertest": "^7.1.4"
   }
 }
