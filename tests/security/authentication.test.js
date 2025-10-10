@@ -1,11 +1,10 @@
 const { expect } = require('chai');
 
-describe('Authentication Security Tests', () => {
-  describe('Password Security', () => {
-    it('should enforce strong password requirements', () => {
+describe('Authentication Security Tests', function() {
+  describe('Password Security', function() {
+    it('should enforce strong password requirements', function() {
       const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
       
-      // Test various password scenarios
       const testPasswords = [
         { password: 'Short1!', valid: false, reason: 'Too short' },
         { password: 'longpasswordwithoutuppercase1!', valid: false, reason: 'No uppercase' },
@@ -13,7 +12,7 @@ describe('Authentication Security Tests', () => {
         { password: 'LongPasswordWithoutNumber!', valid: false, reason: 'No number' },
         { password: 'LongPasswordWithoutSpecial123', valid: false, reason: 'No special char' },
         { password: 'SecurePass123!@', valid: true, reason: 'Valid password' },
-        { password: 'VeryLongSecurePassword123!@', valid: true, reason: 'Valid long password' } // Fixed: removed #$
+        { password: 'VeryLongSecurePassword123!@', valid: true, reason: 'Valid long password' }
       ];
       
       testPasswords.forEach(test => {
@@ -22,24 +21,24 @@ describe('Authentication Security Tests', () => {
     });
   });
 
-  describe('Input Validation', () => {
-    it('should validate username format', () => {
+  describe('Input Validation', function() {
+    it('should validate username format', function() {
       const usernamePattern = /^[a-zA-Z0-9_]{3,30}$/;
       
       expect(usernamePattern.test('user123')).to.be.true;
       expect(usernamePattern.test('user_name')).to.be.true;
-      expect(usernamePattern.test('ab')).to.be.false; // Too short
-      expect(usernamePattern.test('verylongusernameexceedingthirtychars')).to.be.false; // Too long
-      expect(usernamePattern.test('user@name')).to.be.false; // Invalid char
+      expect(usernamePattern.test('ab')).to.be.false;
+      expect(usernamePattern.test('verylongusernameexceedingthirtychars')).to.be.false;
+      expect(usernamePattern.test('user@name')).to.be.false;
     });
 
-    it('should validate account number format', () => {
+    it('should validate account number format', function() {
       const accountPattern = /^[A-Z0-9]{8,34}$/;
       
       expect(accountPattern.test('12345678')).to.be.true;
-      expect(accountPattern.test('ACC123456789012345678901234567890')).to.be.true; // 34 chars
-      expect(accountPattern.test('1234567')).to.be.false; // Too short
-      expect(accountPattern.test('123-456-789')).to.be.false; // Invalid chars
+      expect(accountPattern.test('ACC123456789012345678901234567890')).to.be.true;
+      expect(accountPattern.test('1234567')).to.be.false;
+      expect(accountPattern.test('123-456-789')).to.be.false;
     });
   });
 });
