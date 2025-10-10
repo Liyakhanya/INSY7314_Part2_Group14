@@ -1,22 +1,21 @@
 {
   "dependencies": {
     "express-mongo-sanitize": "^2.2.0",
-    "hpp": "^0.2.3",
+    "hpp": "^0.2.3", 
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
-    "chai": "^6.2.0",
-    "mocha": "^11.7.4",
-    "nyc": "^17.1.0",
-    "supertest": "^7.1.4"
-  
-},
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "supertest": "^6.3.3"
+  },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "npx mocha tests/**/*.test.js --reporter spec --timeout 10000",
-    "test:ci": "npx mocha tests/**/*.test.js --reporter spec --timeout 10000",
-    "test:security": "npx mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
+    "test": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:ci": "mocha tests/**/*.test.js --reporter spec --timeout 10000",
+    "test:security": "mocha tests/security/**/*.test.js --reporter spec --timeout 10000",
     "audit": "npm audit --audit-level=moderate",
     "sonar": "sonar-scanner"
   }

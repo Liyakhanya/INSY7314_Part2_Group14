@@ -8,26 +8,17 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: npm install
-      - run:
-          name: Fix Mocha permissions
+          name: Install guaranteed dependencies
           command: |
-            # Make sure mocha binary has execute permissions
-            chmod +x node_modules/.bin/mocha
-            ls -la node_modules/.bin/mocha
-      - run:
-          name: Verify Mocha works
-          command: npx mocha --version
-      - run:
-          name: Run security audit
-          command: npm run audit
+            npm install
+            npm list mocha chai
       - run:
           name: Run security tests
-          command: npm test
+          command: |
+            ./node_modules/.bin/mocha tests/**/*.test.js --reporter spec --timeout 10000
       - run:
-          name: Test completion
-          command: echo "✅ All 10 security tests completed successfully"
+          name: Security audit
+          command: npm audit --audit-level=moderate
 
   sonar-scan:
     docker:
@@ -39,24 +30,18 @@ jobs:
           name: Install dependencies
           command: npm install
       - run:
-          name: Install SonarScanner
-          command: |
-            npm install -g sonarqube-scanner
-      - run:
           name: Run SonarQube analysis
           command: |
-            sonar-scanner \
+            npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
               -Dsonar.organization=liyakhanya \
               -Dsonar.sources=. \
-              -Dsonar.tests=tests \
-              -Dsonar.test.inclusions=**/*.test.js \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token=$SONAR_TOKEN
 
 workflows:
   version: 2
-  security-and-quality:
+  main:
     jobs:
       - test-backend
       - sonar-scan:

@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 
-describe('Authentication Security Tests', function() {
-  describe('Password Security', function() {
-    it('should enforce strong password requirements', function() {
+describe('Authentication Security Tests', () => {
+  describe('Password Security', () => {
+    it('should enforce strong password requirements', () => {
       const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
       
       const testPasswords = [
@@ -21,8 +21,8 @@ describe('Authentication Security Tests', function() {
     });
   });
 
-  describe('Input Validation', function() {
-    it('should validate username format', function() {
+  describe('Input Validation', () => {
+    it('should validate username format', () => {
       const usernamePattern = /^[a-zA-Z0-9_]{3,30}$/;
       
       expect(usernamePattern.test('user123')).to.be.true;
@@ -32,7 +32,7 @@ describe('Authentication Security Tests', function() {
       expect(usernamePattern.test('user@name')).to.be.false;
     });
 
-    it('should validate account number format', function() {
+    it('should validate account number format', () => {
       const accountPattern = /^[A-Z0-9]{8,34}$/;
       
       expect(accountPattern.test('12345678')).to.be.true;
