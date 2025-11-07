@@ -7,8 +7,8 @@ const xss = require('xss-clean');
 
 // Enhanced rate limiting for the banking application
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limiting each IP to 5 login attempts per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 5,
     message: {
         success: false,
         error: 'Too many authentication attempts, please try again later.'
@@ -19,8 +19,8 @@ const authLimiter = rateLimit({
 });
 
 const paymentLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // limiting each IP to 10 payment requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 10,
     message: {
         success: false,
         error: 'Too many payment requests, please try again later.'
@@ -30,8 +30,8 @@ const paymentLimiter = rateLimit({
 });
 
 const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limiting each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: {
         success: false,
         error: 'Too many requests from this IP, please try again later.'
@@ -42,8 +42,8 @@ const generalLimiter = rateLimit({
 
 // Brute force protection for sensitive endpoints
 const sensitiveLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // limiting each IP to 3 attempts per hour
+    windowMs: 60 * 60 * 1000,
+    max: 3,
     message: {
         success: false,
         error: 'Too many attempts. Please try again after an hour.'
@@ -52,26 +52,31 @@ const sensitiveLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Enhanced brute force protection with IP + username granularity
+// ✅ FIXED: Brute force protection - removed custom keyGenerator
 const bruteForceLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 3, // Limiting each IP + username to 3 failed attempts
+    windowMs: 15 * 60 * 1000,
+    max: 3,
     message: {
         success: false,
         error: 'Too many failed attempts. Please try again later.'
     },
     skipSuccessfulRequests: true,
-    keyGenerator: (req) => {
-        const username = req.body?.username || req.body?.email || '';
-        return req.ip + username;
-    },
+    // ✅ REMOVED: Problematic keyGenerator that caused IPv6 issues
     standardHeaders: true,
     legacyHeaders: false,
 });
 
+// ✅ UPDATED CORS CONFIGURATION - Added HTTP origins for employee portal
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: [
+        process.env.FRONTEND_URL || 'https://localhost:5173',
+        process.env.FRONTEND_URL_EMPLOYEE || 'https://localhost:3002',
+        'https://localhost:3002',
+        'https://localhost:5173',
+        'http://localhost:3002',  // ✅ ADDED: HTTP employee portal
+        'http://localhost:5173'   // ✅ ADDED: HTTP main frontend
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Content-Type-Options'],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset']
@@ -85,12 +90,19 @@ const helmetConfig = {
             scriptSrc: ["'self'"], 
             styleSrc: ["'self'", "https://fonts.googleapis.com"], 
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:5173'],
+            // ✅ UPDATED connectSrc - Added HTTP origins
+            connectSrc: [
+                "'self'", 
+                process.env.FRONTEND_URL || 'https://localhost:5173',
+                process.env.FRONTEND_URL_EMPLOYEE || 'https://localhost:3002',
+                'http://localhost:3002',  // ✅ ADDED: HTTP employee portal
+                'http://localhost:5173'   // ✅ ADDED: HTTP main frontend
+            ],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
-            frameAncestors: ["'none'"], // Clickjacking protection
+            frameAncestors: ["'none'"],
             baseUri: ["'self'"],
             formAction: ["'self'"],
             upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
@@ -100,7 +112,7 @@ const helmetConfig = {
         action: 'deny' 
     },
     hsts: {
-        maxAge: 31536000, // 1 year
+        maxAge: 31536000,
         includeSubDomains: true,
         preload: true
     },
@@ -131,7 +143,6 @@ const validateEnvironment = () => {
 };
 
 const securityMiddlewares = (app) => {
-    // Validate environment first
     validateEnvironment();
 
     // Applying security middleware in the correct order
@@ -139,7 +150,7 @@ const securityMiddlewares = (app) => {
     // Helmet security headers (FIRST)
     app.use(helmet(helmetConfig));
 
-    // CORS for cross-origin requests
+    // ✅ UPDATED CORS for cross-origin requests - Now allows both HTTP and HTTPS
     app.use(cors(corsOptions));
 
     // Data sanitization against NoSQL injection
@@ -170,15 +181,13 @@ const securityMiddlewares = (app) => {
 
     // Enhanced cache control for ALL authenticated requests
     app.use((req, res, next) => {
-        // Preventing caching for any request with authorization header
         if (req.headers.authorization || req.path.startsWith('/v1/auth') || req.path.startsWith('/v1/payments')) {
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             res.setHeader('Pragma', 'no-cache');
             res.setHeader('Expires', '0');
             res.setHeader('Surrogate-Control', 'no-store');
         } else if (req.method === 'GET') {
-            // Limited caching for public GET requests
-            res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
+            res.setHeader('Cache-Control', 'public, max-age=300');
         }
         next();
     });
@@ -188,9 +197,13 @@ const securityMiddlewares = (app) => {
 
     // Applying specific rate limiters to routes
     app.use('/v1/auth/login', authLimiter);
-    app.use('/v1/auth/login', bruteForceLimiter); // Additional protection for login
+    app.use('/v1/auth/login', bruteForceLimiter);
     app.use('/v1/auth/register', authLimiter);
     app.use('/v1/payments', paymentLimiter);
+    
+    // ✅ ADDED: Employee login rate limiting
+    app.use('/v1/employee/login', authLimiter);
+    app.use('/v1/employee/login', bruteForceLimiter);
     
     // Extra protection for sensitive endpoints
     app.use('/v1/auth/reset-password', sensitiveLimiter);
@@ -198,23 +211,13 @@ const securityMiddlewares = (app) => {
 
     // Comprehensive security headers for ALL responses
     app.use((req, res, next) => {
-        // Preventing MIME type sniffing
         res.setHeader('X-Content-Type-Options', 'nosniff');
-        
-        // XSS protection for older browsers
         res.setHeader('X-XSS-Protection', '1; mode=block');
-        
-        // Control referrer information
         res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-        
-        // Feature policy - restricting sensitive APIs
         res.setHeader('Permissions-Policy', 
             'camera=(), microphone=(), geolocation=(), payment=(), fullscreen=()'
         );
-        
-        // Preventing browsers from performing DNS prefetching
         res.setHeader('X-DNS-Prefetch-Control', 'off');
-        
         next();
     });
 
@@ -225,49 +228,49 @@ const securityMiddlewares = (app) => {
     });
 
     // Enhancing security event logging
-app.use((req, res, next) => {
-    const securityRelevantEndpoints = [
-        '/v1/auth/login', 
-        '/v1/auth/register', 
-        '/v1/auth/reset-password',
-        '/v1/auth/change-password',
-        '/v1/payments'
-    ];
-    
-    if (securityRelevantEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
-        const logData = {
-            event: 'SECURITY_REQUEST',
-            method: req.method,
-            path: req.path,
-            ip: req.ip,
-            userAgent: req.get('User-Agent'),
-            timestamp: new Date().toISOString(),
-            contentType: req.get('Content-Type')
-        };
+    app.use((req, res, next) => {
+        const securityRelevantEndpoints = [
+            '/v1/auth/login', 
+            '/v1/auth/register', 
+            '/v1/auth/reset-password',
+            '/v1/auth/change-password',
+            '/v1/payments',
+            '/v1/employee/login'  // ✅ ADDED: Employee login
+        ];
+        
+        if (securityRelevantEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
+            const logData = {
+                event: 'SECURITY_REQUEST',
+                method: req.method,
+                path: req.path,
+                ip: req.ip,
+                userAgent: req.get('User-Agent'),
+                timestamp: new Date().toISOString(),
+                contentType: req.get('Content-Type')
+            };
 
-        // checking for sensitive data using optional chaining
-        if (req.body?.password) {
-            logData.hasPassword = true;
-        }
-        if (req.body?.amount) {
-            logData.hasPayment = true;
-        }
-        if (req.body?.email) {
-            logData.hasEmail = true;
-        }
-        if (req.body?.username) {
-            logData.hasUsername = true;
-        }
+            if (req.body?.password) {
+                logData.hasPassword = true;
+            }
+            if (req.body?.amount) {
+                logData.hasPayment = true;
+            }
+            if (req.body?.email) {
+                logData.hasEmail = true;
+            }
+            if (req.body?.username) {
+                logData.hasUsername = true;
+            }
 
-        console.log('🔒 Security Event:', logData);
-    }
-    next();
-});
+            console.log('🔒 Security Event:', logData);
+        }
+        next();
+    });
 
     // Requesting size validation middleware
     app.use((req, res, next) => {
         const contentLength = parseInt(req.get('Content-Length') || '0');
-        const maxSize = 10 * 1024; // 10KB max payload
+        const maxSize = 10 * 1024;
         
         if (contentLength > maxSize) {
             return res.status(413).json({
@@ -295,11 +298,9 @@ app.use((req, res, next) => {
 
 // Enhanced Security utility functions
 const securityUtils = {
-    // Validating and sanitizing input
     sanitizeInput: (input) => {
         if (typeof input !== 'string') return input;
         
-        // Removing potentially dangerous characters and patterns
         return input
             .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
             .replace(/javascript:/gi, '')
@@ -312,7 +313,6 @@ const securityUtils = {
             .trim();
     },
     
-    // Enhanced SQL injection detection
     detectSQLInjection: (input) => {
         const sqlPatterns = [
             /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|EXEC|ALTER|CREATE|TRUNCATE|MERGE|CALL)\b)/i,
@@ -325,7 +325,6 @@ const securityUtils = {
         return sqlPatterns.some(pattern => pattern.test(input));
     },
 
-    // XSS pattern detection
     detectXSS: (input) => {
         const xssPatterns = [
             /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
@@ -338,7 +337,6 @@ const securityUtils = {
         return xssPatterns.some(pattern => pattern.test(input));
     },
     
-    // Validating file uploads 
     validateFileUpload: (file) => {
         const allowedMimeTypes = [
             'image/jpeg',
@@ -347,24 +345,21 @@ const securityUtils = {
             'application/pdf'
         ];
         
-        const maxFileSize = 5 * 1024 * 1024; // 5MB
+        const maxFileSize = 5 * 1024 * 1024;
         
         return allowedMimeTypes.includes(file.mimetype) && file.size <= maxFileSize;
     },
 
-    // Validating email format
     validateEmail: (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     },
 
-    // Generating secure random string
     generateSecureRandom: (length = 32) => {
         const crypto = require('crypto');
         return crypto.randomBytes(length).toString('hex');
     },
 
-    // Password strength validation
     validatePasswordStrength: (password) => {
         const minLength = 12;
         const hasUpperCase = /[A-Z]/.test(password);

@@ -10,14 +10,24 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
-    https: true, // Enable HTTPS
+    host: '0.0.0.0', 
+    https: true, 
+    strictPort: true, 
     proxy: {
       '/api': {
-        target: 'https://localhost:3000',
+        target: 'https://localhost:3000', 
         changeOrigin: true,
         secure: false, // Allow self-signed certificates
         rewrite: (path) => path.replace(/^\/api/, '/v1')
       }
+    },
+    hmr: {
+      host: 'localhost',
+      port: 5173
     }
+  },
+  preview: {
+    port: 5173,
+    host: '0.0.0.0'
   }
 })

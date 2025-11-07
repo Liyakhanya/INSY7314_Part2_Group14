@@ -1,0 +1,83 @@
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:5
+    container_name: bank_mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=bankportal
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bank_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/bankportal --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Backend API Service
+  backend_api:
+    build:
+      context: C:/Users/lab_services_student/AndroidStudioProjects/INSY7314_Part2_Group14/INSYPaymentPortal/backend
+      dockerfile: Dockerfile
+    container_name: bank_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - CONN_STRING=mongodb+srv://frank:Oogies0308@tester.hdluekh.mongodb.net/
+      - JWT_SECRET=39475acac060b954d85de4af5f97f9724ac595d497f59917d4036b20f43d8c950a8d9ed20d3bb95471d446b3a9ef59d5bf85c58782789b13daf
+      - FRONTEND_URL=https://localhost:5173
+      - FRONTEND_URL_EMPLOYEE=https://localhost:3002
+      - API_PORT=3000
+    networks:
+      - bank_network
+    healthcheck:
+      test: ["CMD", "node", "health-check.js"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - C:/Users/lab_services_student/AndroidStudioProjects/INSY7314_Part2_Group14/INSYPaymentPortal/backend/ssl:/app/ssl
+
+  # Customer Portal Frontend
+  customer_portal:
+    build:
+      context: C:/Users/lab_services_student/AndroidStudioProjects/INSY7314_Part2_Group14/INSYPaymentPortal/frontend
+      dockerfile: Dockerfile
+    container_name: bank_customer_portal
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=https://localhost:3000/v1
+    depends_on:
+      - backend_api
+    networks:
+      - bank_network
+
+  # Employee Portal Frontend
+  employee_portal:
+    build:
+      context: C:/Users/lab_services_student/AndroidStudioProjects/INSY7314_Part2_Group14/INSYPaymentPortal/employee-portal
+      dockerfile: Dockerfile
+    container_name: bank_employee_portal
+    ports:
+      - "3002:3002"
+    environment:
+      - REACT_APP_API_URL=https://localhost:3000/v1
+      - PORT=3002
+    depends_on:
+      - backend_api
+    networks:
+      - bank_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  bank_network:
+    driver: bridge
