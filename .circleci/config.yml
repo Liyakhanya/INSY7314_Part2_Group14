@@ -13,11 +13,11 @@ jobs:
           command: npm install
 
       - run:
-          name: Security Audit (npm audit)
+          name: Security Audit
           command: npm audit --audit-level=moderate
 
       - run:
-          name: Run Security Tests
+          name: Run Tests
           command: npm test
 
       - run:
@@ -25,13 +25,14 @@ jobs:
           command: |
             node -e "
               const pkg = require('./package.json');
-              const required = ['express-mongo-sanitize', 'hpp', 'xss-clean'];
-              const missing = required.filter(dep => !pkg.dependencies[dep]);
-              if (missing.length > 0) {
-                console.error('Missing security dependencies:', missing);
+              const deps = ['express-mongo-sanitize', 'hpp', 'xss-clean'];
+              const missing = deps.filter(dep => !pkg.dependencies[dep]);
+              if (missing.length === 0) {
+                console.log('✅ All security dependencies present');
+              } else {
+                console.error('❌ Missing:', missing);
                 process.exit(1);
               }
-              console.log('✅ All security dependencies present');
             "
 
       - run:
@@ -40,8 +41,10 @@ jobs:
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
               -Dsonar.organization=$SONAR_ORG \
-              -Dsonar.sources=. \
-              -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/** \
+              -Dsonar.sources=INSYPaymentPortal/backend,INSYPaymentPortal/frontend/src,INSYPaymentPortal/employee-portal/src \
+              -Dsonar.tests=tests \
+              -Dsonar.test.inclusions=**/*.test.js \
+              -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/coverage/**,**/*.test.js \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token=$SONAR_TOKEN
 
