@@ -339,6 +339,8 @@ describe('API Security Testing', () => {
 - Security middleware functionality tests
 - Password policy enforcement testing
 ```
+<img width="946" height="446" alt="Screenshot (455)" src="https://github.com/user-attachments/assets/ea6d012d-2b17-4858-912d-b39c33600a3e" />
+
 
 ## 🎥 Demonstration
 
