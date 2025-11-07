@@ -22,7 +22,7 @@ jobs:
   sonar-scan:
     docker:
       - image: cimg/node:20.10
-    resource_class: medium  # More resources for SonarQube
+    resource_class: medium
     working_directory: ~/project
     steps:
       - checkout
@@ -31,12 +31,12 @@ jobs:
           command: |
             npm ci
       - run:
-          name: Run SonarQube Scan (Optimized)
+          name: Run SonarQube Scan (Corrected Paths)
           command: |
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
               -Dsonar.organization=$SONAR_ORG \
-              -Dsonar.sources=backend,frontend/src,employee-portal/src \
+              -Dsonar.sources=INSYPaymentPortal/backend,INSYPaymentPortal/frontend/src,INSYPaymentPortal/employee-portal/src \
               -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/coverage/**,**/*.test.js \
               -Dsonar.tests=tests \
               -Dsonar.test.inclusions=**/*.test.js \
@@ -45,7 +45,7 @@ jobs:
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token=$SONAR_TOKEN \
               -Dsonar.scm.disabled=true
-          no_output_timeout: 30m  # Prevent timeout
+          no_output_timeout: 30m
 
 workflows:
   version: 2
