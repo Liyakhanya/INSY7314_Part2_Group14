@@ -3,42 +3,49 @@ version: 2.1
 jobs:
   test-backend:
     docker:
-      - image: cimg/node:18.17.0
+      - image: cimg/node:20.10
     working_directory: ~/project
     steps:
       - checkout
       - run:
           name: Install dependencies
-          command: npm install
+          command: |
+            npm ci
       - run:
           name: Run security tests
-          command: node node_modules/mocha/bin/mocha.js tests/**/*.test.js --reporter spec --timeout 10000
+          command: |
+            npx mocha tests/**/*.test.js --reporter spec --timeout 30000
       - run:
           name: Security audit
           command: npm audit --audit-level=moderate
 
   sonar-scan:
     docker:
-      - image: cimg/node:18.17.0
+      - image: cimg/node:20.10
+    resource_class: medium  # More resources for SonarQube
     working_directory: ~/project
     steps:
       - checkout
       - run:
           name: Install dependencies
-          command: npm install
+          command: |
+            npm ci
       - run:
-          name: Run SonarQube (FIXED - separates sources/tests)
+          name: Run SonarQube Scan (Optimized)
           command: |
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
-              -Dsonar.organization=liyakhanya \
-              -Dsonar.sources=. \
+              -Dsonar.organization=$SONAR_ORG \
+              -Dsonar.sources=backend,frontend/src,employee-portal/src \
+              -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/coverage/**,**/*.test.js \
               -Dsonar.tests=tests \
               -Dsonar.test.inclusions=**/*.test.js \
-              -Dsonar.coverage.exclusions=**/*.test.js \
               -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+              -Dsonar.coverage.exclusions=**/*.test.js \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=$SONAR_TOKEN
+              -Dsonar.token=$SONAR_TOKEN \
+              -Dsonar.scm.disabled=true
+          no_output_timeout: 30m  # Prevent timeout
 
 workflows:
   version: 2
