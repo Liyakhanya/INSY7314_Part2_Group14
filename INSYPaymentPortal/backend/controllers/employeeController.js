@@ -1,6 +1,7 @@
 const Employee = require('../models/employee');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const generateJWT = (payload) => jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -15,7 +16,13 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Username and password required' });
     }
     
-    const employee = await Employee.findOne({ username });
+    // FIX: Validate and sanitize username before query
+    if (typeof username !== 'string') {
+      return res.status(400).json({ message: 'Invalid username format' });
+    }
+    const sanitizedUsername = username.trim().toLowerCase();
+    
+    const employee = await Employee.findOne({ username: sanitizedUsername });
     if (!employee) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -58,14 +65,20 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: 'Full name, username, and password are required' });
     }
     
-    const existingEmployee = await Employee.findOne({ username });
+    // FIX: Validate and sanitize username before query
+    if (typeof username !== 'string') {
+      return res.status(400).json({ message: 'Invalid username format' });
+    }
+    const sanitizedUsername = username.trim().toLowerCase();
+    
+    const existingEmployee = await Employee.findOne({ username: sanitizedUsername });
     if (existingEmployee) {
       return res.status(400).json({ message: 'Username already exists' });
     }
     
     const newEmp = await Employee.create({ 
       fullName, 
-      username, 
+      username: sanitizedUsername, 
       password: password,
       role: role || 'employee' 
     });
@@ -73,7 +86,7 @@ exports.createEmployee = async (req, res) => {
     const employeeResponse = newEmp.toObject();
     delete employeeResponse.password;
     
-    console.log('Employee created successfully:', username);
+    console.log('Employee created successfully:', sanitizedUsername);
     
     res.json({ 
       message: 'Employee created successfully',
@@ -105,6 +118,11 @@ exports.getEmployees = async (req, res) => {
 exports.deleteEmployee = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // FIX: Validate MongoDB ObjectId format before query
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid employee ID format' });
+    }
     
     const employee = await Employee.findByIdAndDelete(id);
     
