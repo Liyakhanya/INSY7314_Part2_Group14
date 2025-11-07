@@ -1,57 +1,52 @@
 version: 2.1
 
 jobs:
-  test-backend:
+  devsecops-pipeline:
     docker:
       - image: cimg/node:20.10
     working_directory: ~/project
     steps:
       - checkout
+      
       - run:
           name: Install dependencies
-          command: |
-            npm ci
+          command: npm install
+
       - run:
-          name: Run security tests
-          command: |
-            npx mocha tests/**/*.test.js --reporter spec --timeout 30000
-      - run:
-          name: Security audit
+          name: Security Audit (npm audit)
           command: npm audit --audit-level=moderate
 
-  sonar-scan:
-    docker:
-      - image: cimg/node:20.10
-    resource_class: medium
-    working_directory: ~/project
-    steps:
-      - checkout
       - run:
-          name: Install dependencies
+          name: Run Security Tests
+          command: npm test
+
+      - run:
+          name: Verify Security Dependencies
           command: |
-            npm ci
+            node -e "
+              const pkg = require('./package.json');
+              const required = ['express-mongo-sanitize', 'hpp', 'xss-clean'];
+              const missing = required.filter(dep => !pkg.dependencies[dep]);
+              if (missing.length > 0) {
+                console.error('Missing security dependencies:', missing);
+                process.exit(1);
+              }
+              console.log('✅ All security dependencies present');
+            "
+
       - run:
-          name: Run SonarQube Scan (Corrected Paths)
+          name: SonarQube Scan
           command: |
             npx sonarqube-scanner \
               -Dsonar.projectKey=Liyakhanya_INSY7314_Part2_Group14 \
               -Dsonar.organization=$SONAR_ORG \
-              -Dsonar.sources=INSYPaymentPortal/backend,INSYPaymentPortal/frontend/src,INSYPaymentPortal/employee-portal/src \
-              -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/coverage/**,**/*.test.js \
-              -Dsonar.tests=tests \
-              -Dsonar.test.inclusions=**/*.test.js \
-              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-              -Dsonar.coverage.exclusions=**/*.test.js \
+              -Dsonar.sources=. \
+              -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/** \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=$SONAR_TOKEN \
-              -Dsonar.scm.disabled=true
-          no_output_timeout: 30m
+              -Dsonar.token=$SONAR_TOKEN
 
 workflows:
   version: 2
-  main:
+  pipeline:
     jobs:
-      - test-backend
-      - sonar-scan:
-          requires:
-            - test-backend
+      - devsecops-pipeline
